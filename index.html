@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css"/>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap");
+
+* {
+  padding: 0;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  outline: none;
+  border: none;
+  border-radius: 0;
+  color: #000000bd;
+}
+body {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  font-size: 0.95rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(102.7deg, #d1d0ff, #e4bbff, #ffdae3, #ffddfc)
+    fixed;
+}
+input,
+textarea,
+button {
+  background: transparent;
+  border-radius: 0;
+  font-size: 0.95rem;
+}
+main {
+  display: flex;
+  width: 450px;
+  max-height: 80%;
+  padding: 0 20px;
+}
+#wrapper {
+  position: relative;
+  display: grid;
+  background: #ffffff83;
+  box-shadow: 0 10px 80px #0000003d;
+  border-radius: 1rem;
+  overflow-y: hidden;
+}
+header {
+  padding: 20px 20px 10px 20px;
+  border-bottom: 1px solid #bbbdc7;
+}
+#input {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr auto;
+  margin: 20px 0 0 0;
+}
+#input .form-control {
+  width: 100%;
+}
+#input .submit-btn {
+  padding: 5px 15px;
+  background: #e4bbff8f;
+  border-radius: 1rem;
+  cursor: pointer;
+}
+#list {
+  overflow-y: auto;
+  display: grid;
+  margin: 0 5px 0 0;
+}
+#list::-webkit-scrollbar {
+  width: 8px;
+}
+#list::-webkit-scrollbar-button {
+  height: 5px;
+}
+#list::-webkit-scrollbar-thumb {
+  background: #0000003d;
+  border-radius: 2rem;
+}
+.cards .cards-info .time {
+  opacity: 0.5;
+  font-size: 0.8rem;
+}
+.cards {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #bbbdc750;
+}
+.cards-info {
+  overflow-x: hidden;
+}
+.cards-info .task {
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cards.resolved {
+  background: #b7ddf33d;
+}
+.cards.resolved .cards-info {
+  opacity: 0.5;
+}
+.cards.resolved .cards-info .task {
+  text-decoration: line-through;
+}
+.cards .resolved-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #bbbdc7;
+  color: #00000000;
+  cursor: pointer;
+}
+.cards .resolved-btn.active {
+  background: #6ebb95;
+  color: #ffffff;
+  border-color: #5ea180;
+}
+.cards .delete-btn {
+  visibility: hidden;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #e75978;
+  color: #e75978;
+  cursor: pointer;
+}
+.cards:hover {
+  background: #c4e9ff23;
+}
+.cards:hover .delete-btn {
+  visibility: visible;
+}
+
+    </style>
+   
+</head>
+<body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" integrity="sha512-YWzhKL2whUzgiheMoBFwW8CKV4qpHQAEuvilg9FAn5VJUDwKZZxkJNuGM4XkWuk94WCrrwslk8yWNGmY1EduTA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<main>
+  <div id="wrapper">
+    <header>
+      <h2 id="date"></h2>
+      <p id="task-count"></p>
+      <div id="input">
+        <input type="text" name="task" class="form-control" placeholder="Add a new Task..." value="" autocomplete="off">
+        <button class="submit-btn">Submit</button>
+      </div>
+    </header>
+    <section id="list"></section>
+  </div>
+</main>
+<script>
+    function header() {
+const dateHeader = document.getElementById("date");
+const taskCount = document.getElementById("task-count");
+
+let storage = JSON.parse(localStorage.getItem("todolist"));
+storage = storage ? storage : [];
+
+dateHeader.innerHTML = moment(new Date()).format("ddd, DD MMM YYYY");
+taskCount.innerHTML = `${storage.length} Tasks`;
+}
+
+function listSection() {
+let storage = JSON.parse(localStorage.getItem("todolist"));
+// if there is no item in localstorage, initialize new object array
+storage = storage ? storage : [];
+
+let list = document.getElementById("list");
+list.innerHTML = "";
+
+// create a div element with class name 'cards'
+function cardElements(id, title, createdAt, resolved) {
+// set time with momentjs
+const time = moment(createdAt).locale("en-US").fromNow();
+
+return `
+  <div class="cards ${resolved ? "resolved" : null}">
+    <button
+      class="fas fa-check btn resolved-btn ${resolved ? "active" : null}"
+      value=${id}
+    ></button>
+    <div class="cards-info">
+      <h3 class="task">${title}</h3>
+      <p class="time">${time}</p>
+    </div>
+    <button value=${id} class="fas fa-times btn delete-btn"></button>
+  </div>
+`;
+}
+
+storage.reverse().map((elem) => {
+list.innerHTML += cardElements(
+  elem.id,
+  elem.title,
+  elem.createdAt,
+  elem.resolved
+);
+});
+
+listAction();
+}
+
+function listAction() {
+const deleteBtn = document.querySelectorAll(".cards .delete-btn");
+const resolvedBtn = document.querySelectorAll(".cards .resolved-btn");
+
+// initialize delete list function
+function deleteList(listID) {
+let storage = JSON.parse(localStorage.getItem("todolist"));
+// if there is no item in localstorage, initialize new object array
+storage = storage ? storage : [];
+
+const res = storage.filter((elem) => {
+  return elem.id !== listID;
+});
+
+localStorage.setItem("todolist", JSON.stringify(res));
+}
+
+function resolvedList(listID) {
+let storage = JSON.parse(localStorage.getItem("todolist"));
+// if there is no item in localstorage, initialize new object array
+storage = storage ? storage : [];
+// find todolist data then change property value 'resolved' to 'true'
+storage.map((elem) => {
+  if (elem.id === listID) {
+    if (elem.resolved === true) {
+      elem.resolved = false;
+    } else {
+      elem.resolved = true;
+    }
+  }
+});
+
+localStorage.setItem("todolist", JSON.stringify(storage));
+}
+
+deleteBtn.forEach((elem) => {
+elem.addEventListener("click", (event) => {
+  deleteList(event.target.value);
+
+  // update data
+  listSection();
+  header();
+});
+});
+
+resolvedBtn.forEach((elem) => {
+elem.addEventListener("click", (event) => {
+  resolvedList(event.target.value);
+
+  // update data
+  listSection();
+});
+});
+}
+
+(function () {
+const inputField = document.getElementsByClassName("form-control")[0];
+const submitBtn = document.getElementsByClassName("submit-btn")[0];
+
+// read user typing
+inputField.addEventListener("keyup", (event) => {
+inputField.value = event.target.value;
+});
+
+function handleSubmit() {
+let storage = JSON.parse(localStorage.getItem("todolist"));
+// if there is no item in localstorage, initialize new object array
+storage = storage ? storage : [];
+
+// create unique ID for each list
+const listID = [];
+const alphabet =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+for (let i = 0; i < 10; i++) {
+  listID[i] = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+}
+
+if (inputField.value.length > 0) {
+  // insert new data into storage array object
+  storage.push({
+    id: listID.join(""),
+    title: inputField.value,
+    createdAt: new Date(),
+    resolved: false
+  });
+
+  // update local storage with new data
+  localStorage.setItem("todolist", JSON.stringify(storage));
+
+  listSection();
+  header();
+  inputField.value = "";
+}
+}
+
+inputField.onkeypress = (event) =>
+event.keyCode === 13 ? handleSubmit() : null;
+submitBtn.onclick = () => handleSubmit();
+})();
+
+window.onload = () => {
+let storage = JSON.parse(localStorage.getItem('todolist'));
+// if there is no item in localstorage, initialize new object array
+storage = storage ? storage : [];
+const defaultDate = new Date('Mon Nov 08 2021 04:43:51 GMT-0800');
+
+if (storage.length === 0) {
+const manual = [
+  {
+    id: 'Rb5B80r8jj',
+    resolved: false,
+    title: 'Morning Jog in the City Park',
+    createdAt: defaultDate,
+  },
+  {
+    id: 'eV4B60r5Fc',
+    resolved: false,
+    title: 'Open Codepen and Get Inspired',
+    createdAt: defaultDate,
+  },
+  {
+    id: 'pY2v99r0Ff',
+    resolved: true,
+    title: 'Completing the Project',
+    createdAt: defaultDate,
+  },
+];
+
+storage.push(...manual);
+localStorage.setItem('todolist', JSON.stringify(storage));
+}
+
+header();
+listSection();
+}
+
+</script>
+</body>
+</html>
